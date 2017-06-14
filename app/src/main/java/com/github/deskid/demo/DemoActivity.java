@@ -1,8 +1,6 @@
 package com.github.deskid.demo;
 
 import android.app.Activity;
-import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -13,16 +11,13 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.Spinner;
 
-import com.github.deskid.freecover.DisplayUtils;
+import com.github.deskid.freecover.ScreenUtils;
 import com.github.deskid.freecover.FreeCover;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class GridActivity extends Activity {
-
-//    @BindView(R.id.gridview)
-//    GridView mGridView;
+public class DemoActivity extends Activity {
 
     @BindView(R.id.items)
     RecyclerView mRecyclerView;
@@ -39,11 +34,6 @@ public class GridActivity extends Activity {
     private String mAnchor = FreeCover.TOP;
     @FreeCover.HoleStyle
     private String mStyle = FreeCover.CIRCLE;
-
-    public static void start(Context context) {
-        Intent starter = new Intent(context, GridActivity.class);
-        context.startActivity(starter);
-    }
 
     boolean mIsInit = true;
 
@@ -114,10 +104,10 @@ public class GridActivity extends Activity {
 
         final FreeCover.ImageCoverBuilder imageCoverBuilder = new FreeCover.ImageCoverBuilder()
                 .setAnchor(anchor)
-                .setTopOffset(DisplayUtils.dpToPx(0))
-                .setBottomOffset(DisplayUtils.dpToPx(0))
-                .setLeftOffset(DisplayUtils.dpToPx(0))
-                .setRightOffset(DisplayUtils.dpToPx(0))
+                .setTopOffset(0)
+                .setBottomOffset(0)
+                .setLeftOffset(0)
+                .setRightOffset(0)
                 .setWidth(100)
                 .setHeight(100)
                 .setImgRes(R.drawable.ic_arrow_downward_black_24dp);
@@ -134,12 +124,13 @@ public class GridActivity extends Activity {
 
         @Override
         public ViewHolder onCreateViewHolder(final ViewGroup parent, final int viewType) {
-            ImageView imageView = new ImageView(parent.getContext());
-            int screenWidth = DisplayUtils.getScreenWidth();
-            int width = screenWidth / 3 - DisplayUtils.dpToPx(20);
+            int width = ScreenUtils.getScreenWidth() / 3 - ScreenUtils.dpToPx(24);
+            int height = ScreenUtils.dpToPx(130);
+            int padding = ScreenUtils.dpToPx(8);
 
-            imageView.setLayoutParams(new ViewGroup.LayoutParams(width, DisplayUtils.dpToPx(130)));
-            imageView.setPadding(DisplayUtils.dpToPx(8), DisplayUtils.dpToPx(8), DisplayUtils.dpToPx(8), DisplayUtils.dpToPx(8));
+            ImageView imageView = new ImageView(parent.getContext());
+            imageView.setLayoutParams(new ViewGroup.LayoutParams(width, height));
+            imageView.setPadding(padding, padding, padding, padding);
             parent.addView(imageView);
             return new ViewHolder(imageView);
         }
@@ -150,8 +141,10 @@ public class GridActivity extends Activity {
             holder.mImageView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(final View v) {
-                    mPosition = holder.getAdapterPosition();
-                    onGuideCoverViewConfigChange(mStyle, mAnchor, mPosition);
+                    if (mPosition != holder.getAdapterPosition()) {
+                        mPosition = holder.getAdapterPosition();
+                        onGuideCoverViewConfigChange(mStyle, mAnchor, mPosition);
+                    }
                 }
             });
         }

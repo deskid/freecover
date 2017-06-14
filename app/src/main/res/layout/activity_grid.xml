@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -8,32 +7,20 @@
         android:id="@+id/spinnerStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_toLeftOf="@+id/middle"/>
+        android:layout_toLeftOf="@+id/middle" />
 
     <Space
         android:id="@+id/middle"
         android:layout_width="1px"
         android:layout_height="1px"
-        android:layout_centerHorizontal="true"/>
+        android:layout_centerHorizontal="true" />
 
     <Spinner
         android:id="@+id/spinnerPosition"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_toRightOf="@+id/middle"/>
+        android:layout_toRightOf="@+id/middle" />
 
-    <!--<GridView-->
-    <!--android:id="@+id/gridview"-->
-    <!--android:layout_width="match_parent"-->
-    <!--android:layout_height="match_parent"-->
-    <!--android:layout_below="@+id/spinnerStyle"-->
-    <!--android:columnWidth="90dp"-->
-    <!--android:gravity="center"-->
-    <!--android:horizontalSpacing="10dp"-->
-    <!--android:numColumns="auto_fit"-->
-    <!--android:stretchMode="columnWidth"-->
-    <!--android:verticalSpacing="10dp"-->
-    <!--/>-->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -43,6 +30,7 @@
         <android.support.v7.widget.RecyclerView
             android:id="@+id/items"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content" />
     </ScrollView>
+
 </RelativeLayout>

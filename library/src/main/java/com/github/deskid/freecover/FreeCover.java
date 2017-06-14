@@ -7,6 +7,8 @@ import android.support.annotation.StringDef;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -33,6 +35,7 @@ public class FreeCover {
     public static final String TOP = "top";
     public static final String BOTTOM = "bottom";
     public static final String FLOAT = "float";
+    private WebImageView mWebImageView;
 
     @Retention(RetentionPolicy.SOURCE)
     @StringDef(value = {LEFT, RIGHT, TOP, BOTTOM, FLOAT})
@@ -92,16 +95,16 @@ public class FreeCover {
     private void setupImageCover() {
         if (mImageCoverBuilder != null) {
             mImageLayout = new RelativeLayout(mTargetView.getContext());
-            final WebImageView image = new WebImageView(mTargetView.getContext());
-            image.setBackgroundColor(Color.TRANSPARENT);
-            image.setScaleType(ImageView.ScaleType.FIT_XY);
+            mWebImageView = new WebImageView(mTargetView.getContext());
+            mWebImageView.setBackgroundColor(Color.TRANSPARENT);
+            mWebImageView.setScaleType(ImageView.ScaleType.FIT_XY);
             int w = ViewGroup.LayoutParams.WRAP_CONTENT;
             int h = ViewGroup.LayoutParams.WRAP_CONTENT;
             RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(w, h);
-            mImageLayout.addView(image, params);
+            mImageLayout.addView(mWebImageView, params);
 
             if (!TextUtils.isEmpty(mImageCoverBuilder.getImgUrl())) {
-                image.setImageUrl(mImageCoverBuilder.getImgUrl(), new Callback() {
+                mWebImageView.setImageUrl(mImageCoverBuilder.getImgUrl(), new Callback() {
                     @Override
                     public void onSuccess() {
                         show();
@@ -112,21 +115,12 @@ public class FreeCover {
                     }
                 });
             } else {
-                image.setImageRes(mImageCoverBuilder.getImgRes(), new Callback() {
-                    @Override
-                    public void onSuccess() {
-                        show();
-                    }
-
-                    @Override
-                    public void onError() {
-
-                    }
-                });
+                mWebImageView.setImageRes(mImageCoverBuilder.getImgRes());
+                show();
             }
 
-            DisplayUtils.scaleViewByWidthRatio(image, mImageCoverBuilder.getWidth(), mImageCoverBuilder.getHeight());
-            RelativeLayout.LayoutParams mImageLayoutParams = (RelativeLayout.LayoutParams) image.getLayoutParams();
+            ScreenUtils.scaleViewByWidthRatio(mWebImageView, mImageCoverBuilder.getWidth(), mImageCoverBuilder.getHeight());
+            RelativeLayout.LayoutParams mImageLayoutParams = (RelativeLayout.LayoutParams) mWebImageView.getLayoutParams();
 
             int[] pos = new int[2];
             mTargetView.getLocationInWindow(pos);
@@ -154,7 +148,7 @@ public class FreeCover {
                     break;
             }
 
-            image.setOnClickListener(new View.OnClickListener() {
+            mWebImageView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     cleanUp();
@@ -179,7 +173,7 @@ public class FreeCover {
 
     public void cleanUp() {
         if (mOverlayLayout != null) {
-            mOverlayLayout.cleanUp();
+            mDecorView.removeView(mOverlayLayout);
         }
         if (mImageLayout != null) {
             mDecorView.removeView(mImageLayout);
@@ -195,6 +189,8 @@ public class FreeCover {
         }
         if (mImageLayout != null) {
             mDecorView.addView(mImageLayout, layoutParams);
+            Animation animation = AnimationUtils.loadAnimation(mOwnActivity, R.anim.center_pop);
+            mWebImageView.startAnimation(animation);
         }
     }
 

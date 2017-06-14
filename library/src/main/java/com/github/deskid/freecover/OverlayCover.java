@@ -1,5 +1,6 @@
 package com.github.deskid.freecover;
 
+import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -10,10 +11,11 @@ import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.AttributeSet;
+import android.util.Property;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
+import android.view.animation.OvershootInterpolator;
 
 import static com.github.deskid.freecover.FreeCover.CIRCLE;
 import static com.github.deskid.freecover.FreeCover.OVAL;
@@ -21,6 +23,19 @@ import static com.github.deskid.freecover.FreeCover.RECTANGLE;
 import static com.github.deskid.freecover.FreeCover.ROUNDRECT;
 
 public class OverlayCover extends View {
+    private static final Property<OverlayCover, Float> PROGRESS_PROPERTY =
+            new Property<OverlayCover, Float>(Float.class, "progressProperty") {
+                @Override
+                public Float get(OverlayCover object) {
+                    return object.getAnimationProgress();
+                }
+
+                @Override
+                public void set(OverlayCover object, Float value) {
+                    object.setAnimationProgress(value);
+                }
+            };
+
     private Paint mPaint;
     private Bitmap mEraserBitmap;
     private Canvas mEraserCanvas;
@@ -28,14 +43,13 @@ public class OverlayCover extends View {
     @FreeCover.HoleStyle
     private String mStyle = CIRCLE;
     private int mBackgroundColor;
-
     private GestureDetector mDetector;
-
     private int[] mPosition = new int[2];
     private Rect mTargetViewDrawingRect = new Rect();
     private int mRadius = 0; // drawCircle,drawRoundRect
-    private Rect mRect;      // drawRect
-    private RectF mRectF;    // drawRoundRect,drawOval
+    private Rect mRect = new Rect();      // drawRect
+    private RectF mRectF = new RectF();    // drawRoundRect,drawOval
+    private float mAnimationProgress;
 
     private OverlayCover(final Context context) {
         super(context);
@@ -43,10 +57,6 @@ public class OverlayCover extends View {
 
     private OverlayCover(final Context context, final AttributeSet attrs) {
         super(context, attrs);
-    }
-
-    private OverlayCover(final Context context, final AttributeSet attrs, final int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
     }
 
     public OverlayCover(Context context, @FreeCover.HoleStyle String style, int backgroundColor, View targetView) {
@@ -63,8 +73,8 @@ public class OverlayCover extends View {
     }
 
     private void init() {
-        int screenWidth = DisplayUtils.getScreenWidth();
-        int screenHeight = DisplayUtils.getScreenHeight();
+        int screenWidth = ScreenUtils.getScreenWidth();
+        int screenHeight = ScreenUtils.getScreenHeight();
         mEraserBitmap = Bitmap.createBitmap(screenWidth, screenHeight, Bitmap.Config.ARGB_4444);
         //Although ALPHA_8 consumes less memory and more efficient
         //in some device it may turn out black and lose transparent
@@ -78,6 +88,7 @@ public class OverlayCover extends View {
         mTargetView.getLocationOnScreen(mPosition);
         mTargetView.getDrawingRect(mTargetViewDrawingRect);
         mTargetViewDrawingRect.offset(mPosition[0], mPosition[1]);
+
         mDetector = new GestureDetector(getContext(), new GestureDetector.SimpleOnGestureListener() {
             @Override
             public boolean onSingleTapUp(final MotionEvent e) {
@@ -91,25 +102,24 @@ public class OverlayCover extends View {
             }
         });
 
+        int centerX = mPosition[0] + mTargetView.getWidth() / 2;
+        int centerY = mPosition[1] + mTargetView.getHeight() / 2;
+
         switch (mStyle) {
             case CIRCLE:
-                if (mRadius == 0) {
-                    if (mTargetView.getHeight() > mTargetView.getWidth()) {
-                        mRadius = mTargetView.getHeight() / 2;
-                    } else {
-                        mRadius = mTargetView.getWidth() / 2;
-                    }
-                }
+                mRadius = 0;
                 break;
             case RECTANGLE:
-                mRect = new Rect(mPosition[0], mPosition[1],
-                        mPosition[0] + mTargetView.getWidth(),
-                        mPosition[1] + mTargetView.getHeight());
+                mRect.left = centerX;
+                mRect.right = centerX;
+                mRect.top = centerY;
+                mRect.bottom = centerY;
                 break;
             case OVAL:
-                mRectF = new RectF(mPosition[0], mPosition[1],
-                        mPosition[0] + mTargetView.getWidth(),
-                        mPosition[1] + mTargetView.getHeight());
+                mRectF.left = centerX;
+                mRectF.right = centerX;
+                mRectF.top = centerY;
+                mRectF.bottom = centerY;
                 break;
             case ROUNDRECT:
                 if (mRadius == 0) {
@@ -119,17 +129,22 @@ public class OverlayCover extends View {
                         mRadius = mTargetView.getHeight() / 2;
                     }
                 }
-                mRectF = new RectF(mPosition[0], mPosition[1],
-                        mPosition[0] + mTargetView.getWidth(),
-                        mPosition[1] + mTargetView.getHeight());
+                mRectF.left = centerX;
+                mRectF.right = centerX;
+                mRectF.top = centerY;
+                mRectF.bottom = centerY;
                 break;
         }
     }
 
-    protected void cleanUp() {
-        if (getParent() != null) {
-            ((ViewGroup) getParent()).removeView(this);
-        }
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        mAnimationProgress = 0;
+        ObjectAnimator progrssAnimator = ObjectAnimator.ofFloat(this, PROGRESS_PROPERTY, 0.0f, 1);
+        progrssAnimator.setInterpolator(new OvershootInterpolator());
+        progrssAnimator.setDuration(200);
+        progrssAnimator.start();
     }
 
     @Override
@@ -140,7 +155,6 @@ public class OverlayCover extends View {
             mEraserBitmap.recycle();
         }
         mEraserBitmap = null;
-
     }
 
     @Override
@@ -149,9 +163,17 @@ public class OverlayCover extends View {
         mEraserBitmap.eraseColor(Color.TRANSPARENT);
         mEraserCanvas.drawColor(mBackgroundColor);
 
+        computeDrawRectWhenNeeded();
+
         switch (mStyle) {
             case CIRCLE:
-                mEraserCanvas.drawCircle(mPosition[0] + mTargetView.getWidth() / 2, mPosition[1] + mTargetView.getHeight() / 2, mRadius, mPaint);
+                if (mTargetView.getHeight() > mTargetView.getWidth()) {
+                    mRadius = (int) ((mAnimationProgress * 0.5 * mTargetView.getHeight()));
+                } else {
+                    mRadius = (int) (mAnimationProgress * 0.5 * mTargetView.getWidth());
+                }
+                mEraserCanvas.drawCircle(mPosition[0] + mTargetView.getWidth() / 2,
+                        mPosition[1] + mTargetView.getHeight() / 2, mRadius, mPaint);
                 break;
             case RECTANGLE:
                 mEraserCanvas.drawRect(mRect, mPaint);
@@ -170,5 +192,29 @@ public class OverlayCover extends View {
     public boolean onTouchEvent(final MotionEvent event) {
         mDetector.onTouchEvent(event);
         return super.onTouchEvent(event);
+    }
+
+    public float getAnimationProgress() {
+        return mAnimationProgress;
+    }
+
+    public void setAnimationProgress(final float progressInSection) {
+        mAnimationProgress = progressInSection;
+        invalidate();
+    }
+
+    public void computeDrawRectWhenNeeded() {
+        if (mStyle.equals(CIRCLE)) {
+            return;
+        }
+        mRect.left = mPosition[0] + (int) ((1 - mAnimationProgress) * 0.5 * mTargetView.getWidth());
+        mRect.top = mPosition[1] + (int) ((1 - mAnimationProgress) * 0.5 * mTargetView.getHeight());
+        mRect.right = mPosition[0] + (int) ((1 + mAnimationProgress) * 0.5 * mTargetView.getWidth());
+        mRect.bottom = mPosition[1] + (int) ((1 + mAnimationProgress) * 0.5 * mTargetView.getHeight());
+
+        mRectF.left = mRect.left;
+        mRectF.top = mRect.top;
+        mRectF.right = mRect.right;
+        mRectF.bottom = mRect.bottom;
     }
 }

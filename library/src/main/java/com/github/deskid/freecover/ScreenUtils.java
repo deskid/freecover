@@ -5,12 +5,11 @@ import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.View;
 
-public class DisplayUtils {
+public final class ScreenUtils {
 
-    private DisplayUtils() {
+    private ScreenUtils() {
     }
 
-    //750 offer by our iOS ui sketch
     private static final int SCREEN_WIDTH_OF_UI_DESIGN = 750;
 
     private static DisplayMetrics sDM = Resources.getSystem().getDisplayMetrics();
@@ -69,7 +68,7 @@ public class DisplayUtils {
      * @return 缩放后的宽度
      */
     public static int getScaledWidthInDevice(final int widthInUIDesign, final int screenWidthInUIDesign) {
-        int screenWidth = DisplayUtils.getScreenWidth();
+        int screenWidth = ScreenUtils.getScreenWidth();
         return screenWidth * widthInUIDesign / screenWidthInUIDesign;
     }
 
