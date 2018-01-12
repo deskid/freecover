@@ -1,6 +1,7 @@
 package com.github.deskid.demo;
 
 import android.app.Activity;
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -11,8 +12,8 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.Spinner;
 
-import com.github.deskid.freecover.ScreenUtils;
 import com.github.deskid.freecover.FreeCover;
+import com.github.deskid.freecover.ScreenUtils;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -43,6 +44,66 @@ public class DemoActivity extends Activity {
         setContentView(R.layout.activity_grid);
         ButterKnife.bind(this);
 
+        initStyleSpinner();
+
+        initAnchorSpinner();
+
+        ItemAdapter itemAdapter = new ItemAdapter();
+        mRecyclerView.setAdapter(itemAdapter);
+        RecyclerView.LayoutManager layoutManager = new GridLayoutManager(this, 3);
+        mRecyclerView.addItemDecoration(new RecyclerView.ItemDecoration() {
+            @Override
+            public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
+                super.getItemOffsets(outRect, view, parent, state);
+                int space = ScreenUtils.dpToPx(8);
+                if (parent.getChildAdapterPosition(view) % 3 == 0) {
+                    outRect.left = space;
+                    outRect.top = space;
+                    outRect.right = space / 2;
+                    outRect.bottom = space;
+                } else if (parent.getChildAdapterPosition(view) % 3 == 1) {
+                    outRect.left = space / 2;
+                    outRect.top = space;
+                    outRect.right = space / 2;
+                    outRect.bottom = space;
+                } else if (parent.getChildAdapterPosition(view) % 3 == 2) {
+                    outRect.left = space / 2;
+                    outRect.top = space;
+                    outRect.right = space;
+                    outRect.bottom = space;
+                }
+
+            }
+        });
+        mRecyclerView.setLayoutManager(layoutManager);
+
+    }
+
+    private void initAnchorSpinner() {
+        String[] position = {"TOP", "BOTTOM", "LEFT", "RIGHT", "TOP_CENTER", "BOTTOM_CENTER"};
+        final String[] anchors = {
+                FreeCover.TOP,
+                FreeCover.BOTTOM,
+                FreeCover.LEFT,
+                FreeCover.RIGHT,
+                FreeCover.TOP_CENTER,
+                FreeCover.BOTTOM_CENTER
+        };
+
+        mSpinnerPostion.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, position));
+        mSpinnerPostion.setOnItemSelectedListener(new SimpleOnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                mAnchor = anchors[position];
+                if (!mIsInit) {
+                    onGuideCoverViewConfigChange(mStyle, mAnchor, mPosition);
+                }
+                mIsInit = false;
+            }
+        });
+    }
+
+    private void initStyleSpinner() {
         String[] style = {"CIRCLE", "RECTANGLE", "ROUNDRECT", "OVAL"};
         final String[] styles = {
                 FreeCover.CIRCLE,
@@ -53,55 +114,17 @@ public class DemoActivity extends Activity {
 
         mSpinnerStyle.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, style));
         mSpinnerStyle.setOnItemSelectedListener(
-                new AdapterView.OnItemSelectedListener() {
+                new SimpleOnItemSelectedListener() {
                     @Override
                     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                         mStyle = styles[position];
                         onGuideCoverViewConfigChange(mStyle, mAnchor, mPosition);
                     }
-
-                    @Override
-                    public void onNothingSelected(AdapterView<?> parent) {
-
-                    }
                 }
-
         );
-
-        String[] position = {"TOP", "BOTTOM", "LEFT", "RIGHT"};
-        final String[] anchors = {
-                FreeCover.TOP,
-                FreeCover.BOTTOM,
-                FreeCover.LEFT,
-                FreeCover.RIGHT,
-        };
-
-        mSpinnerPostion.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, position));
-        mSpinnerPostion.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                mAnchor = anchors[position];
-                if (!mIsInit) {
-                    onGuideCoverViewConfigChange(mStyle, mAnchor, mPosition);
-                }
-                mIsInit = false;
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
-        });
-
-        ItemAdapter itemAdapter = new ItemAdapter();
-        mRecyclerView.setAdapter(itemAdapter);
-        RecyclerView.LayoutManager layoutManager = new GridLayoutManager(this, 3);
-        mRecyclerView.setLayoutManager(layoutManager);
-
     }
 
     private void onGuideCoverViewConfigChange(String style, String anchor, int position) {
-
         final FreeCover.ImageCoverBuilder imageCoverBuilder = new FreeCover.ImageCoverBuilder()
                 .setAnchor(anchor)
                 .setTopOffset(0)
@@ -116,7 +139,6 @@ public class DemoActivity extends Activity {
                 .setHoleStyle(style)
                 .setImageCover(imageCoverBuilder)
                 .setupView();
-
     }
 
     private class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> {
@@ -124,13 +146,10 @@ public class DemoActivity extends Activity {
 
         @Override
         public ViewHolder onCreateViewHolder(final ViewGroup parent, final int viewType) {
-            int width = ScreenUtils.getScreenWidth() / 3 - ScreenUtils.dpToPx(24);
+            int width = ScreenUtils.getScreenWidth() / 3 - ScreenUtils.dpToPx(16);
             int height = ScreenUtils.dpToPx(130);
-            int padding = ScreenUtils.dpToPx(8);
-
             ImageView imageView = new ImageView(parent.getContext());
             imageView.setLayoutParams(new ViewGroup.LayoutParams(width, height));
-            imageView.setPadding(padding, padding, padding, padding);
             parent.addView(imageView);
             return new ViewHolder(imageView);
         }

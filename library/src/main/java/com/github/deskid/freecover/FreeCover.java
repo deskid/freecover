@@ -22,7 +22,7 @@ public class FreeCover {
     private Activity mOwnActivity;
     private View mTargetView;
     private RelativeLayout mImageLayout;
-    private OverlayCover mOverlayLayout;
+    private OverlayCover mOverlayCover;
     private ImageCoverBuilder mImageCoverBuilder;
     @HoleStyle
     private String mStyle;
@@ -35,10 +35,13 @@ public class FreeCover {
     public static final String TOP = "top";
     public static final String BOTTOM = "bottom";
     public static final String FLOAT = "float";
+    public static final String TOP_CENTER = "top_center";
+    public static final String BOTTOM_CENTER = "bottom_center";
+
     private WebImageView mWebImageView;
 
     @Retention(RetentionPolicy.SOURCE)
-    @StringDef(value = {LEFT, RIGHT, TOP, BOTTOM, FLOAT})
+    @StringDef(value = {LEFT, RIGHT, TOP, BOTTOM, FLOAT, TOP_CENTER, BOTTOM_CENTER})
     public @interface Anchor {
     }
 
@@ -83,8 +86,8 @@ public class FreeCover {
     }
 
     private void setupOverlayCover() {
-        mOverlayLayout = new OverlayCover(mOwnActivity, mStyle, mRadius, mBackgroundColor, mTargetView);
-        mOverlayLayout.setOnClickListener(new View.OnClickListener() {
+        mOverlayCover = new OverlayCover(mOwnActivity, mStyle, mRadius, mBackgroundColor, mTargetView);
+        mOverlayCover.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 cleanUp();
@@ -130,8 +133,16 @@ public class FreeCover {
                     mImageLayoutParams.leftMargin = pos[0] + (int) (0.5 * (mTargetView.getWidth() - mImageLayoutParams.width)) - mImageCoverBuilder.getLeftOffset() + mImageCoverBuilder.getRightOffset();
                     mImageLayoutParams.topMargin = pos[1] - mImageLayoutParams.height - mImageCoverBuilder.getTopOffset() + mImageCoverBuilder.getBottomOffset();
                     break;
+                case TOP_CENTER:
+                    mImageLayoutParams.addRule(RelativeLayout.CENTER_HORIZONTAL);
+                    mImageLayoutParams.topMargin = pos[1] - mImageLayoutParams.height - mImageCoverBuilder.getTopOffset() + mImageCoverBuilder.getBottomOffset();
+                    break;
                 case BOTTOM:
                     mImageLayoutParams.leftMargin = pos[0] + (int) (0.5 * (mTargetView.getWidth() - mImageLayoutParams.width)) - mImageCoverBuilder.getLeftOffset() + mImageCoverBuilder.getRightOffset();
+                    mImageLayoutParams.topMargin = pos[1] + mTargetView.getHeight() - mImageCoverBuilder.getTopOffset() + mImageCoverBuilder.getBottomOffset();
+                    break;
+                case BOTTOM_CENTER:
+                    mImageLayoutParams.addRule(RelativeLayout.CENTER_HORIZONTAL);
                     mImageLayoutParams.topMargin = pos[1] + mTargetView.getHeight() - mImageCoverBuilder.getTopOffset() + mImageCoverBuilder.getBottomOffset();
                     break;
                 case LEFT:
@@ -172,8 +183,8 @@ public class FreeCover {
     }
 
     public void cleanUp() {
-        if (mOverlayLayout != null) {
-            mDecorView.removeView(mOverlayLayout);
+        if (mOverlayCover != null) {
+            mDecorView.removeView(mOverlayCover);
         }
         if (mImageLayout != null) {
             mDecorView.removeView(mImageLayout);
@@ -184,8 +195,8 @@ public class FreeCover {
         int width, height;
         width = height = FrameLayout.LayoutParams.MATCH_PARENT;
         FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(width, height);
-        if (mOverlayLayout != null) {
-            mDecorView.addView(mOverlayLayout, layoutParams);
+        if (mOverlayCover != null) {
+            mDecorView.addView(mOverlayCover, layoutParams);
         }
         if (mImageLayout != null) {
             mDecorView.addView(mImageLayout, layoutParams);
