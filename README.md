@@ -1,3 +1,5 @@
+[![](https://jitpack.io/v/deskid/freecover.svg)](https://jitpack.io/#deskid/freecover)
+
 # FreeCover
 
 feel free to create a highlight layer that cover over the target view.
